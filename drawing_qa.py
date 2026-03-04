@@ -143,11 +143,21 @@ class DrawingQA:
         
         print(f"Loading ColPali model on {self.device}...")
         
-        dtype = torch.float16 if self.device in ("cuda", "mps") else torch.float32
-        self._model = ColPali.from_pretrained(
-            self.model_name,
-            torch_dtype=dtype
-        ).to(self.device).eval()
+        # Use float32 on CPU to avoid meta tensor issues
+        # Use float16 on GPU/MPS for memory efficiency
+        if self.device == "cpu":
+            self._model = ColPali.from_pretrained(
+                self.model_name,
+                torch_dtype=torch.float32,
+                device_map="cpu",
+                low_cpu_mem_usage=True
+            ).eval()
+        else:
+            self._model = ColPali.from_pretrained(
+                self.model_name,
+                torch_dtype=torch.float16,
+                device_map=self.device
+            ).eval()
         
         self._processor = ColPaliProcessor.from_pretrained(self.model_name)
         print("Model loaded.")
