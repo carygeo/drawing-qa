@@ -37,7 +37,7 @@ ENV/
 drawing_index/
 example_index/
 *.pdf
-!sample_*.pdf
+!samples/*.pdf
 
 # Jupyter
 .ipynb_checkpoints/
