@@ -32,6 +32,88 @@ drawing-qa search "fire exit location"
 drawing-qa ask "What's the room dimension?" --llm claude
 ```
 
+## Example: Foundation Drawings
+
+The repo includes a sample 14-page foundation drawing set (`samples/test_drawing.pdf`) to demonstrate the capabilities.
+
+### Index the Sample Drawing
+
+```bash
+drawing-qa index samples/test_drawing.pdf
+# Output: Indexed 14 pages (1024 patches per page)
+```
+
+### Search for Specific Details
+
+```bash
+# Find foundation details
+drawing-qa search "strip foundation"
+# → Page 3: 82% | Region: x=20%-60%, y=40%-80%
+
+# Locate reinforcement details
+drawing-qa search "steel reinforcement rebar"
+# → Page 7: 76% | Region: x=15%-85%, y=30%-70%
+
+# Find dimensions
+drawing-qa search "foundation dimensions measurements"
+# → Page 4: 71% | Region: x=10%-90%, y=20%-60%
+
+# Locate concrete specifications
+drawing-qa search "concrete block wall"
+# → Page 5: 79% | Region: x=25%-75%, y=35%-85%
+```
+
+### Generate Heatmap Visualizations
+
+```bash
+# Visualize where foundation footings are shown
+drawing-qa visualize "foundation footing detail" -o footing_heatmap.png
+
+# Find and highlight insulation details
+drawing-qa visualize "insulation floor" -o insulation_heatmap.png
+
+# Locate drainage and waterproofing
+drawing-qa visualize "damp proof membrane" -o damp_proof_heatmap.png
+```
+
+### Python API Example
+
+```python
+from drawing_qa import DrawingQA
+
+qa = DrawingQA()
+qa.index("samples/test_drawing.pdf")
+
+# Search for foundation wall details
+results = qa.search("foundation wall section")
+for r in results[:3]:
+    print(f"Page {r.page}: {r.score:.0%}")
+    print(f"  Region: {r.region}")
+    
+# Get answer with sources
+answer = qa.ask("What type of foundation is shown?", llm="claude")
+print(answer.answer)
+# → "The drawings show strip foundations with concrete footings..."
+
+# Generate visualization
+qa.visualize(results[0], output_path="wall_section.png")
+```
+
+### What You Can Find
+
+The visual search works for construction drawing elements like:
+
+| Query | What It Finds |
+|-------|---------------|
+| `"strip foundation"` | Foundation plan views and sections |
+| `"steel reinforcement"` | Rebar details and schedules |
+| `"concrete block"` | Wall construction details |
+| `"floor slab"` | Ground floor construction |
+| `"damp proof course"` | DPC and membrane details |
+| `"dimension"` | Measurement annotations |
+| `"section A-A"` | Cross-section callouts |
+| `"scale 1:50"` | Scale indicators |
+
 ## Installation
 
 ### Prerequisites
