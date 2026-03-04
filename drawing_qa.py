@@ -648,6 +648,13 @@ def main():
     server_parser.add_argument("--port", type=int, default=8000, help="Port to bind")
     server_parser.add_argument("--index-path", default="./drawing_index", help="Index directory")
     
+    # Visualize command (key capability!)
+    viz_parser = subparsers.add_parser("visualize", help="Generate heatmap visualization for a query")
+    viz_parser.add_argument("query", help="Search query to visualize")
+    viz_parser.add_argument("--output", "-o", default="heatmap.png", help="Output image path")
+    viz_parser.add_argument("--show", action="store_true", help="Display the visualization")
+    viz_parser.add_argument("--index-path", default="./drawing_index", help="Index directory")
+    
     args = parser.parse_args()
     
     if args.command == "index":
@@ -693,6 +700,30 @@ def main():
     
     elif args.command == "server":
         start_server(args.host, args.port, args.index_path)
+    
+    elif args.command == "visualize":
+        qa = DrawingQA(index_path=args.index_path)
+        results = qa.search(args.query, top_k=1)
+        
+        if not results:
+            print("No results found for query.")
+            return
+        
+        result = results[0]
+        print(f"\n🔍 Query: {args.query}")
+        print(f"📄 Best match: {result.filename} page {result.page} ({result.score:.0%})")
+        print(f"📍 Region: x={result.region[0]:.0%}-{result.region[2]:.0%}, y={result.region[1]:.0%}-{result.region[3]:.0%}")
+        print(f"🔥 Generating heatmap...")
+        
+        try:
+            qa.visualize(result, output_path=args.output, show=args.show)
+            print(f"\n✅ Heatmap saved: {args.output}")
+            print(f"   Red overlay shows regions matching your query.")
+            print(f"   Bounding box highlights the detected area.")
+        except ImportError:
+            print("\n❌ Visualization requires: pip install matplotlib scipy")
+        except Exception as e:
+            print(f"\n❌ Error: {e}")
     
     else:
         parser.print_help()

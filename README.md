@@ -4,6 +4,18 @@
 
 Uses [ColPali](https://github.com/illuin-tech/colpali) for visual document understanding - the same technology that understands charts, diagrams, and technical drawings by looking at them, not just reading text.
 
+## 🔥 Key Capability: Heatmap Visualization
+
+The killer feature is showing **WHERE** on the drawing the answer is located:
+
+```bash
+drawing-qa visualize "fire exit location" --output result.png
+```
+
+This generates a heatmap overlay showing exactly which regions of the drawing match your query - critical for large construction documents where you need to find specific details fast.
+
+![Heatmap Example](docs/heatmap_example.png)
+
 ## Quick Start
 
 ```bash
@@ -103,14 +115,18 @@ qa.visualize(results[0], output_path="result.png")
 
 ```bash
 # Index documents
-drawing-qa index *.pdf
-drawing-qa index drawings/ --recursive
+drawing-qa index blueprint.pdf
+drawing-qa index floor_plan.pdf --force
 
-# Search
+# Search (returns pages + regions)
 drawing-qa search "hvac unit location"
 drawing-qa search "dimension" --top-k 10
 
-# Get answers
+# Visualize with heatmap (key feature!)
+drawing-qa visualize "fire exit" --output fire_exit.png
+drawing-qa visualize "electrical panel" -o panel.png --show
+
+# Get answers with LLM
 drawing-qa ask "What size is the main duct?" --llm claude
 drawing-qa ask "Fire rating requirement" --llm openai
 
@@ -158,14 +174,33 @@ curl "http://localhost:8000/ask?question=room%20dimensions&llm=claude"
 1. **Index**: PDFs are rendered to images, then ColPali generates 1024 patch embeddings per page (32x32 grid)
 2. **Search**: Your query is embedded and matched against patches using cosine similarity
 3. **Locate**: Matching patches are aggregated to identify relevant pages AND specific regions
-4. **Answer**: Optionally, an LLM synthesizes the search results into a coherent answer
+4. **Visualize**: Heatmap overlay shows attention intensity across the drawing
+5. **Answer**: Optionally, an LLM synthesizes the search results into a coherent answer
 
 ```
 PDF → Images → ColPali Patches → ChromaDB
                                     ↓
 Query → ColPali Embedding → Vector Search → Results + Regions
                                     ↓
+                            Heatmap Visualization
+                                    ↓
                               LLM Answer (optional)
+```
+
+### Heatmap Details
+
+Each page is divided into a 32x32 grid (1024 patches). When you search:
+
+- Each patch gets a relevance score based on visual similarity to your query
+- High-scoring patches are highlighted in the heatmap (yellow → red)
+- A bounding box is drawn around the region of interest
+- You get normalized coordinates (x1, y1, x2, y2) for integration
+
+```python
+result = qa.search("electrical panel")[0]
+print(result.region)  # (0.65, 0.20, 0.85, 0.45) = right side, upper quarter
+print(result.score)   # 0.78 = 78% confidence
+print(result.patch_indices)  # [234, 235, 266, 267, ...] = which patches matched
 ```
 
 ## Configuration
