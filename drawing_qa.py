@@ -201,8 +201,10 @@ class DrawingQA:
         import torch
         
         with torch.no_grad():
-            inputs = self.processor(images=[image], return_tensors="pt").to(self.device)
-            embeddings = self.model.forward_images(**inputs)
+            # Use process_images for image encoding (ColPali v0.3+)
+            batch_images = self.processor.process_images([image])
+            batch_images = {k: v.to(self.device) for k, v in batch_images.items()}
+            embeddings = self.model(**batch_images)
         
         return embeddings.cpu().numpy().squeeze(0)
     
@@ -211,8 +213,11 @@ class DrawingQA:
         import torch
         
         with torch.no_grad():
-            inputs = self.processor(text=[query], return_tensors="pt").to(self.device)
-            embeddings = self.model.forward_queries(**inputs)
+            # Use process_queries for text-only encoding (ColPali v0.3+)
+            # This handles the text tokenization without requiring images
+            batch_queries = self.processor.process_queries([query])
+            batch_queries = {k: v.to(self.device) for k, v in batch_queries.items()}
+            embeddings = self.model(**batch_queries)
         
         return embeddings.cpu().numpy()
     
