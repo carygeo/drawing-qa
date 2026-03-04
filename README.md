@@ -74,6 +74,24 @@ drawing-qa visualize "insulation floor" -o insulation_heatmap.png
 
 # Locate drainage and waterproofing
 drawing-qa visualize "damp proof membrane" -o damp_proof_heatmap.png
+
+# Steel reinforcement details
+drawing-qa visualize "reinforcement bars steel" -o rebar.png
+
+# Waterproofing/DPC
+drawing-qa visualize "damp proof membrane" -o dpc.png
+
+# Wall construction
+drawing-qa visualize "cavity wall insulation" -o cavity.png
+
+# Concrete details
+drawing-qa visualize "concrete block wall" -o block.png
+
+# Floor construction
+drawing-qa visualize "floor slab hardcore" -o floor.png
+
+# Dimensions
+drawing-qa visualize "dimensions measurements" -o dims.png
 ```
 
 ### Python API Example
